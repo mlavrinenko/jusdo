@@ -1,0 +1,8 @@
+[test_config]
+name = "jusdo"
+workspace = true
+skip-clean = true
+
+[report]
+fail-under = 70
+output-dir = "target/coverage"

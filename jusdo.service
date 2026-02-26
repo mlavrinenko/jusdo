@@ -1,0 +1,19 @@
+[Unit]
+Description=jusdo — scoped, time-limited sudo just delegation
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/jusdo serve
+Restart=on-failure
+RuntimeDirectory=jusdo
+RuntimeDirectoryMode=0755
+
+# Hardening
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=no
+
+[Install]
+WantedBy=multi-user.target

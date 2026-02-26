@@ -1,0 +1,7 @@
+cognitive-complexity-threshold = 20
+too-many-arguments-threshold = 5
+too-many-lines-threshold = 70
+single-char-binding-names-threshold = 0
+warn-on-all-wildcard-imports = true
+upper-case-acronyms-aggressive = true
+lint-commented-code = false

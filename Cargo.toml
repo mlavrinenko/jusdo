@@ -1,0 +1,171 @@
+[workspace]
+members = []
+resolver = "3"
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+# --- Correctness & Safety ---
+out_of_bounds_indexing = "deny"
+iter_out_of_bounds = "deny"
+mem_forget = "deny"
+indexing_slicing = "deny"
+unwrap_used = "deny"
+panic_in_result_fn = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+todo = "deny"
+
+# --- Code Quality ---
+cognitive_complexity = "deny"
+too_many_lines = "deny"
+similar_names = "deny"
+many_single_char_names = "deny"
+if_same_then_else = "deny"
+unnecessary_wraps = "deny"
+large_enum_variant = "deny"
+struct_excessive_bools = "deny"
+new_without_default = "deny"
+should_implement_trait = "deny"
+type_complexity = "deny"
+too_many_arguments = "deny"
+needless_lifetimes = "deny"
+needless_pass_by_value = "deny"
+cloned_instead_of_copied = "deny"
+flat_map_option = "deny"
+implicit_clone = "deny"
+inefficient_to_string = "deny"
+map_unwrap_or = "deny"
+manual_let_else = "deny"
+
+# --- Redundancy ---
+no_effect = "deny"
+redundant_closure_call = "deny"
+redundant_closure = "deny"
+redundant_pattern = "deny"
+redundant_static_lifetimes = "deny"
+redundant_field_names = "deny"
+neg_multiply = "deny"
+approx_constant = "deny"
+useless_let_if_seq = "deny"
+useless_vec = "deny"
+unused_unit = "deny"
+unused_self = "deny"
+deprecated_cfg_attr = "deny"
+unseparated_literal_suffix = "deny"
+search_is_some = "deny"
+
+# --- Pattern Matching ---
+single_match = "deny"
+single_match_else = "deny"
+match_wild_err_arm = "deny"
+match_overlapping_arm = "deny"
+
+# --- Imports & Naming ---
+wildcard_imports = "deny"
+module_inception = "deny"
+upper_case_acronyms = "deny"
+enum_glob_use = "deny"
+
+# --- Documentation ---
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
+doc_markdown = "deny"
+
+# --- Casts ---
+trivially_copy_pass_by_ref = "deny"
+ptr_as_ptr = "deny"
+ptr_cast_constness = "deny"
+ref_as_ptr = "deny"
+cast_possible_truncation = "deny"
+cast_sign_loss = "deny"
+
+# --- Debug Leftovers ---
+dbg_macro = "deny"
+
+# --- String Conversions ---
+str_to_string = "deny"
+
+# --- Shared Ownership ---
+rc_buffer = "deny"
+
+# --- Patterns & Exhaustiveness ---
+rest_pat_in_fully_bound_structs = "deny"
+
+# --- File I/O ---
+verbose_file_reads = "deny"
+
+# --- Numeric ---
+lossy_float_literal = "deny"
+
+# --- Formatting ---
+empty_line_after_outer_attr = "deny"
+empty_line_after_doc_comments = "deny"
+fn_params_excessive_bools = "deny"
+needless_raw_string_hashes = "deny"
+
+# --- Style ---
+semicolon_if_nothing_returned = "deny"
+redundant_else = "deny"
+redundant_closure_for_method_calls = "deny"
+match_same_arms = "deny"
+undocumented_unsafe_blocks = "deny"
+bool_to_int_with_if = "deny"
+manual_string_new = "deny"
+uninlined_format_args = "deny"
+
+[package]
+name = "jusdo"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Allow `sudo just` for picked Justfiles."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/mlavrinenko/jusdo"
+authors = ["Maxim Lavrinenko"]
+keywords = ["sudo", "just", "delegation", "security"]
+categories = ["command-line-utilities"]
+exclude = [
+    ".envrc",
+    "AGENT.md",
+    "CLAUDE.md",
+    "demo.Justfile",
+    "flake.nix",
+    "flake.lock",
+    "nix/",
+    "jusdo.service",
+    "Justfile",
+    "tarpaulin.toml",
+    "clippy.toml",
+    "rustfmt.toml",
+    "rust-toolchain.toml",
+]
+
+[lib]
+name = "jusdo"
+path = "src/lib.rs"
+
+[[bin]]
+name = "jusdo"
+path = "src/main.rs"
+
+[dependencies]
+thiserror = "2"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+log = "0.4"
+env_logger = "0.11"
+nix = { version = "0.29", features = ["socket", "process", "user", "signal"] }
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
