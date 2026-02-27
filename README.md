@@ -1,62 +1,81 @@
 # jusdo
 
-Let your AI agent run privileged commands — without handing it `sudo`.
-Using a [Justfile](https://github.com/casey/just).
+**Let your AI agent run privileged commands — without handing it `sudo`.**
 
 ## The Problem
 
-You're configuring your PC with an AI agent. The conversation goes like this:
+You asked your AI agent to fix a networking issue. It needs to
+check routes, tweak settings, verify — and repeat until it works.
+Every step requires root.
 
-> **You:** Set up my firewall — block all incoming except SSH and HTTP.
+> **You:** My VPN traffic isn't routing correctly. Fix it.
 >
-> **Agent:** I'll configure iptables for you. Let me check the current rules first.
->
+> **Agent:** Let me check your routing table.
 > ```
-> $ iptables -L
-> iptables: Permission denied (you must be root)
+> $ ip route show
+> Permission denied
 > ```
+> I need root to diagnose this. Could you grant me `sudo`?
+
+You have two bad options: give the agent unrestricted `sudo`, or
+manually copy-paste every command it suggests. The first is reckless.
+The second defeats the purpose of having an agent.
+
+## How `jusdo` Solves This
+
+The agent writes its commands into a `Justfile`. You review it and
+approve with `jusdo`. The agent then runs recipes freely — iterating
+as many times as needed — without `sudo` and without bothering you
+for each step.
+
+> **You:** My VPN traffic isn't routing correctly. Fix it.
 >
-> **Agent:** I need root access to run this. Could you grant me `sudo`?
-
-Now you have a choice: give an AI agent unrestricted root access, or
-type every command yourself. Neither is great.
-
-## The Solution
-
-With jusdo, you stay in control. You write the commands in a Justfile,
-review them, and approve for a limited time. The agent runs them
-through jusdo — no `sudo`, no password, no unrestricted access.
-
-> **You:** Set up my firewall — block all incoming except SSH and HTTP.
->
-> **Agent:** I'll create a Justfile with the firewall rules. Please review
-> and approve it with jusdo.
+> **Agent:** I'll need to inspect and modify your network config. Here's a
+> Justfile with the commands I may need — please review and approve it.
 >
 > ```just
-> # firewall.just
-> setup:
->     iptables -F
->     iptables -P INPUT DROP
->     iptables -A INPUT -i lo -j ACCEPT
->     iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
->     iptables -A INPUT -p tcp --dport 22 -j ACCEPT
->     iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+> # net-debug.just
+> routes:
+>     ip route show
+>     ip rule list
+> add-route interface gateway:
+>     ip route add 10.0.0.0/8 via {{gateway}} dev {{interface}}
+> dns:
+>     resolvectl status
+> restart-vpn:
+>     systemctl restart openvpn-client@work
 > ```
 >
-> **You:** Looks good.
+> **You:** *(reviews the commands)* Looks reasonable.
 > ```
-> $ sudo jusdo allow firewall.just
+> $ sudo jusdo allow net-debug.just -d 30
 > ```
 >
-> **Agent:** Running it now.
+> **Agent:** Thanks. Let me investigate.
 > ```
-> $ jusdo run firewall.just -- setup
+> $ jusdo run net-debug.just -- routes
+> default via 192.168.1.1 dev eth0
+> 10.0.0.0/8 via 192.168.1.1 dev eth0    # <- wrong, should go via tun0
 > ```
-> Done. Your firewall is configured.
+> Found it — the VPN route is going through your LAN gateway.
+> ```
+> $ jusdo run net-debug.just -- add-route tun0 10.8.0.1
+> ```
+> Let me verify.
+> ```
+> $ jusdo run net-debug.just -- routes
+> 10.0.0.0/8 via 10.8.0.1 dev tun0       # fixed
+> ```
+> Route is correct now. Let me restart the VPN to make sure it holds.
+> ```
+> $ jusdo run net-debug.just -- restart-vpn
+> $ jusdo run net-debug.just -- routes
+> 10.0.0.0/8 via 10.8.0.1 dev tun0       # still good
+> ```
+> Done. Your VPN traffic is routing correctly now.
 
-The grant expires automatically after 60 minutes. The agent can only
-run recipes from the exact file you approved — if anyone changes it,
-jusdo rejects the request.
+The agent ran 5 privileged commands across multiple iterations — you
+only had to approve once. The grant expires in 30 minutes automatically.
 
 ## Quick Start
 
@@ -66,34 +85,29 @@ Start the daemon (once, as root):
 sudo jusdo serve
 ```
 
-The workflow is then three steps:
+Then the workflow is always:
 
 ```bash
 # 1. Agent writes a Justfile with the commands it needs
-# 2. You review and approve it
+# 2. You review and approve
 sudo jusdo allow ./Justfile
-
-# 3. Agent runs recipes — no sudo needed
+# 3. Agent runs recipes as many times as needed — no sudo
 jusdo run ./Justfile -- recipe-name
 ```
 
 ## Commands
 
-### Admin (require sudo)
-
 ```bash
-sudo jusdo allow ./Justfile            # approve for 60 min
+# Admin (require sudo)
+sudo jusdo allow ./Justfile            # approve for 60 min (default)
 sudo jusdo allow ./Justfile -d 120 -y  # 120 min, skip confirmation
 sudo jusdo renew ./Justfile -d 120     # extend grant
 sudo jusdo list                        # show active grants
 sudo jusdo revoke ./Justfile           # revoke immediately
-```
 
-### Agent / developer (no sudo)
-
-```bash
-jusdo run ./Justfile -- build
-jusdo run ./Justfile -- deploy --release
+# Agent / developer (no sudo needed)
+jusdo run ./Justfile -- recipe-name
+jusdo run ./Justfile -- recipe arg1 arg2
 ```
 
 ## Installation
@@ -104,7 +118,6 @@ jusdo run ./Justfile -- deploy --release
 # flake.nix
 {
   inputs.jusdo.url = "github:mlavrinenko/jusdo";
-
   outputs = { nixpkgs, jusdo, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -118,33 +131,34 @@ jusdo run ./Justfile -- deploy --release
 }
 ```
 
-Or install directly:
-
-```bash
-nix profile install github:mlavrinenko/jusdo
-```
+Or: `nix profile install github:mlavrinenko/jusdo`
 
 ### Build from source
 
-Requires Rust 1.85+.
+```bash
+cargo install --path .   # requires Rust 1.85+
+```
+
+## Agent Skill
 
 ```bash
-cargo install --path .
+npx skills add https://github.com/mlavrinenko/jusdo --skill jusdo
 ```
+
+Once installed, the agent will use the `jusdo` workflow whenever it needs
+root — no prompting required.
 
 ## Security
 
 - **Scoped access.** Grants are tied to a specific Justfile, user, and
   time window. No blanket root.
-- **Hash verification.** The daemon records the SHA-256 of the Justfile
-  at approval time and re-checks before every execution. Modified files
-  are rejected.
-- **Environment isolation.** Child processes run with a cleared
-  environment — only `PATH`, `HOME`, and `LANG` are set.
-- **Socket auth.** `SO_PEERCRED` verifies the caller's UID on every
-  request. Only root can grant/revoke. Any user can run approved recipes.
-- **Auto-expiry.** Grants expire after the configured duration. No
-  standing privileges.
+- **Hash verification.** SHA-256 of the Justfile is recorded at approval
+  and re-checked before every run. Modified files are rejected.
+- **Environment isolation.** Child processes get a cleared environment.
+  Only `PATH`, `HOME`, and `LANG` are set.
+- **Socket auth.** `SO_PEERCRED` verifies caller UID. Only root can
+  grant/revoke. Any user can run approved recipes.
+- **Auto-expiry.** Grants expire after the configured duration.
 
 ## Development
 

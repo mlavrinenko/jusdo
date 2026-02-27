@@ -1,0 +1,23 @@
+{
+  "skill_name": "jusdo",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My DNS isn't resolving properly on this server. I can ping 8.8.8.8 but not google.com. Can you figure out what's wrong and fix it?",
+      "expected_output": "Agent writes a Justfile with DNS diagnostic recipes (resolvectl, cat /etc/resolv.conf, systemctl restart systemd-resolved, etc.), asks the user to approve it via sudo jusdo allow, then uses jusdo run to diagnose and fix the issue.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Nginx keeps returning 502 Bad Gateway. Check the logs, figure out what's wrong with the config, and restart it once you've fixed it.",
+      "expected_output": "Agent writes a Justfile with recipes for reading nginx logs, testing config, editing upstream settings, and restarting nginx. Asks user to approve via sudo jusdo allow, then iterates with jusdo run to diagnose, fix, and verify.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "My root partition is 95% full and I need to free up space. Find what's taking up the most room and clean it up safely.",
+      "expected_output": "Agent writes a Justfile with recipes for disk usage analysis (du, df, journalctl --disk-usage) and cleanup commands (journalctl --vacuum-size, apt clean, removing old kernels, etc.). Asks user to approve via sudo jusdo allow, then uses jusdo run to analyze and clean up.",
+      "files": []
+    }
+  ]
+}
