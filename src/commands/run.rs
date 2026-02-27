@@ -4,6 +4,7 @@ use std::path::Path;
 use std::process;
 
 use crate::client;
+use crate::commands::util::require_just;
 use crate::config::Config;
 use crate::error::Error;
 use crate::protocol::{self, Request, Response};
@@ -14,9 +15,11 @@ use crate::protocol::{self, Request, Response};
 ///
 /// # Errors
 ///
-/// Returns an error if the path is invalid, the daemon is unreachable,
-/// or the daemon denies the request.
+/// Returns an error if `just` is not installed, the path is invalid,
+/// the daemon is unreachable, or the daemon denies the request.
 pub fn execute(config: &Config, justfile: &Path, args: Vec<String>) -> Result<(), Error> {
+    require_just()?;
+
     let canonical = justfile
         .canonicalize()
         .map_err(|_| Error::JustfileNotFound(justfile.to_path_buf()))?;

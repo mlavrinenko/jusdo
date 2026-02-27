@@ -121,7 +121,14 @@ fn execute_just_streaming(
         .env("LANG", "C.UTF-8")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .spawn()?;
+        .spawn()
+        .map_err(|e| {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                Error::JustNotFound
+            } else {
+                Error::from(e)
+            }
+        })?;
 
     let (tx, rx) = mpsc::channel::<OutputMsg>();
     let child_stdout = child.stdout.take();

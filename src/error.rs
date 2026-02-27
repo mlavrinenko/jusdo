@@ -57,6 +57,13 @@ pub enum Error {
     #[error("forbidden argument: {0}")]
     ForbiddenArg(String),
 
+    /// `just` is not installed or not found in PATH.
+    #[error(
+        "`just` is not installed or not found in PATH. \
+         Install it via: cargo install just, or nix profile install nixpkgs#just"
+    )]
+    JustNotFound,
+
     /// The user declined the interactive prompt.
     #[error("user declined — file was not allowed")]
     Declined,

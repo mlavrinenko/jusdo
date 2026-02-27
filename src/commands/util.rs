@@ -1,4 +1,30 @@
+use std::process::Command;
+
 use crate::error::Error;
+
+/// Verify that `just` is installed and reachable in PATH.
+///
+/// Logs the detected version at `info` level on success.
+///
+/// # Errors
+///
+/// Returns [`Error::JustNotFound`] if `just --version` cannot be executed.
+pub fn require_just() -> Result<(), Error> {
+    let output = Command::new("just")
+        .arg("--version")
+        .stderr(std::process::Stdio::null())
+        .output()
+        .map_err(|_| Error::JustNotFound)?;
+
+    let version = String::from_utf8_lossy(&output.stdout);
+    let version = version.trim();
+    if version.is_empty() {
+        log::info!("just found (version unknown)");
+    } else {
+        log::info!("detected {version}");
+    }
+    Ok(())
+}
 
 /// Verify the current process is running as root.
 ///
