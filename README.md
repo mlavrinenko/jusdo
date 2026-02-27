@@ -23,42 +23,33 @@ and automatically expiring.
 
 ## Usage
 
+### Start the daemon
+
+```bash
+sudo jusdo serve
+sudo jusdo serve --duration 120 --audit-log /var/log/jusdo.jsonl
+```
+
 ### Admin commands (require sudo)
 
 ```bash
-# Start the daemon (or use the systemd service)
-sudo jusdo serve
-
-# Review and approve a Justfile for 60 minutes (default)
-sudo jusdo allow ./Justfile
-
-# Approve for 120 minutes, skip interactive confirmation
-sudo jusdo allow ./Justfile -d 120 -y
-
-# Extend an existing grant by another 120 minutes
-sudo jusdo renew ./Justfile -d 120
-
-# List active grants
-sudo jusdo list
-
-# Revoke a grant immediately
-sudo jusdo revoke ./Justfile
+sudo jusdo allow ./Justfile            # approve for 60 min (default)
+sudo jusdo allow ./Justfile -d 120 -y  # 120 min, skip confirmation
+sudo jusdo renew ./Justfile -d 120     # extend by 120 min
+sudo jusdo list                        # show active grants
+sudo jusdo revoke ./Justfile           # revoke immediately
 ```
 
 ### Developer commands (no sudo)
 
 ```bash
-# Run a recipe from an approved Justfile
 jusdo run ./Justfile -- build
-
-# Pass arguments to just
 jusdo run ./Justfile -- deploy --release
 ```
 
 ### Quick demo
 
 ```bash
-# Approve and run — no sudo needed for the developer:
 $ sudo jusdo allow demo.Justfile
 $ jusdo run demo.Justfile whoami
 root
@@ -66,46 +57,33 @@ root
 
 ## Installation
 
-### NixOS (recommended)
+### Nix
 
-Add jusdo as a flake input and enable the module:
+Add jusdo as a flake input:
 
 ```nix
 # flake.nix
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    jusdo.url = "github:mlavrinenko/jusdo";
-    jusdo.inputs.nixpkgs.follows = "nixpkgs";
-  };
+  inputs.jusdo.url = "github:mlavrinenko/jusdo";
 
   outputs = { nixpkgs, jusdo, ... }: {
     nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
-      modules = [
-        jusdo.nixosModules.default
-        {
-          services.jusdo = {
-            enable = true;
-            package = jusdo.packages.x86_64-linux.default;
-          };
-        }
-      ];
+      modules = [{
+        environment.systemPackages = [
+          jusdo.packages.x86_64-linux.default
+        ];
+      }];
     };
   };
 }
 ```
 
-#### Module Options
+Or install directly with the Nix package manager:
 
-| Option | Default | Description |
-|---|---|---|
-| `services.jusdo.enable` | `false` | Enable the jusdo daemon |
-| `services.jusdo.package` | — | The jusdo package to use |
-| `services.jusdo.socketDir` | `"/run/jusdo"` | Socket directory |
-| `services.jusdo.defaultDurationMins` | `60` | Default grant duration |
-| `services.jusdo.expiryWarnSecs` | `300` | Seconds before expiry to warn |
-| `services.jusdo.auditLogPath` | `null` | Audit log path (null = disabled) |
+```bash
+nix profile install github:mlavrinenko/jusdo
+```
 
 ### Build from source
 
@@ -114,19 +92,6 @@ Requires Rust 1.85+.
 ```bash
 cargo install --path .
 ```
-
-## Configuration
-
-Optional config file at `/etc/jusdo/config.toml`:
-
-```toml
-socket_dir = "/run/jusdo"
-default_duration_mins = 60
-expiry_warn_secs = 300
-# audit_log_path = "/var/log/jusdo/audit.jsonl"
-```
-
-All fields are optional; defaults apply when omitted.
 
 ## Security
 
@@ -170,23 +135,11 @@ local attackers with write access to the Justfile.
 Prerequisites: [Nix](https://nixos.org/) with flakes enabled.
 
 ```bash
-# Enter dev shell
-direnv allow
-# or: nix develop
-
-# Run checks (clippy + tests + file size limits)
-just check
-
-# Build
+nix develop
+just check    # clippy + tests + file size limits
 just build
-
-# Run tests
 just test
-
-# Code coverage
 just cover
-
-# Format
 just fmt
 ```
 

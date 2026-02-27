@@ -49,10 +49,6 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    /// Configuration file parse error.
-    #[error("config parse error: {0}")]
-    ConfigParse(String),
-
     /// Client passed forbidden arguments (e.g. `--justfile` override).
     #[error("forbidden argument: {0}")]
     ForbiddenArg(String),

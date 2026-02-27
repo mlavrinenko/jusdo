@@ -20,13 +20,6 @@
       overlays.default = final: _prev: {
         jusdo = self.packages.${final.system}.default;
       };
-
-      nixosModules.default =
-        { pkgs, ... }:
-        {
-          nixpkgs.overlays = [ self.overlays.default ];
-          imports = [ ./nix/module.nix ];
-        };
     }
     // flake-utils.lib.eachDefaultSystem (
       system:

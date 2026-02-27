@@ -15,6 +15,10 @@ use clap::{Parser, Subcommand};
 #[derive(Debug, Parser)]
 #[command(name = "jusdo", version, about, long_about)]
 pub struct Cli {
+    /// Path to the daemon Unix socket.
+    #[arg(long, global = true, default_value = "/run/jusdo/jusdo.sock")]
+    pub socket: PathBuf,
+
     #[command(subcommand)]
     pub command: Cmd,
 }
@@ -24,8 +28,25 @@ pub enum Cmd {
     /// Start the daemon (must run as root).
     #[command(long_about = "Start the jusdo daemon. Must be run as root.\n\n\
         The daemon listens on a Unix socket and processes grant/run requests.\n\n\
-        Example:\n  sudo jusdo serve")]
-    Serve,
+        Example:\n  sudo jusdo serve\n  \
+        sudo jusdo serve --duration 120 --audit-log /var/log/jusdo.jsonl")]
+    Serve {
+        /// Directory for the daemon Unix socket.
+        #[arg(long, default_value = "/run/jusdo")]
+        socket_dir: PathBuf,
+
+        /// Default grant duration in minutes.
+        #[arg(long, default_value = "60")]
+        duration: u64,
+
+        /// Seconds before expiry to log warnings.
+        #[arg(long, default_value = "300")]
+        expiry_warn: u64,
+
+        /// Path for the append-only audit log (disabled if omitted).
+        #[arg(long)]
+        audit_log: Option<PathBuf>,
+    },
 
     /// Allow a Justfile for a user (must run via sudo).
     #[command(long_about = "Review and approve a Justfile for execution.\n\n\
