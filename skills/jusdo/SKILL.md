@@ -1,15 +1,10 @@
 ---
 name: jusdo
 description: >
-  How to run privileged (root/sudo) commands safely using the jusdo tool.
-  Use this skill whenever the agent needs elevated privileges — for example,
-  when encountering "Permission denied" errors, when tasks involve systemctl,
-  ip route, iptables, mount, chown, package managers (apt, dnf, pacman),
-  editing files in /etc, or any operation that would normally require sudo.
-  Also use it when the user explicitly mentions jusdo, Justfiles for
-  privileged commands, or asks you to "fix something as root." Even if the
-  user doesn't mention jusdo by name, use this skill whenever root access
-  is needed — jusdo is the approved way to get it.
+  How to run recurring privileged (root/sudo) commands safely using the
+  jusdo tool. Use when debugging requires multiple iterative sudo calls
+  (e.g., checking logs, restarting services, testing config changes).
+  Ignore for one-off single commands.
 ---
 
 # jusdo — Run Privileged Commands Safely
@@ -18,6 +13,10 @@ You have access to `jusdo`, a tool that lets you run commands as root
 without having (or needing) `sudo`. Instead of asking the user for their
 sudo password or suggesting they run commands manually, use the jusdo
 workflow described below.
+
+**Note:** Use jusdo only when you anticipate needing multiple iterative
+sudo calls to debug/triage. For one-off single commands, ignore this
+skill and either ask the user to run it manually or just proceed.
 
 ## Why jusdo exists
 
